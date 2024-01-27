@@ -17,7 +17,7 @@ CREATE TABLE assets (
 );
 
 -- Create ComparisonHistory table
-CREATE TABLE comparisons_history (
+CREATE TABLE users_assets_comparisons (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     asset_id_1 INTEGER NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
