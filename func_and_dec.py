@@ -14,12 +14,12 @@ def login_required(f):
 
 ################################ Other Functions ################################
 
-def login(user):
+def perform_login(user):
     """Log in user."""
 
     session[CURRENT_USER_KEY] = user.id
 
-def logout():
+def perform_logout():
     """Logout user."""
 
     session.pop(CURRENT_USER_KEY, None)

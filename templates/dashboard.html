@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+<!-- break -->
+{% block title %} Dashboard {% endblock %}
+<!-- break -->
+{% block navbar_links %}
+<li>
+  <form action="{{ url_for('logout') }}" method="POST">
+    <button>Logout</button>
+  </form>
+</li>
+{% endblock %}
+<!-- break -->
+{% block content %}
+<h1>{{ user.username }}'s Dashboard</h1>
+
+{% endblock %}

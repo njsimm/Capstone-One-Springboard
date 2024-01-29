@@ -12,7 +12,7 @@ from config import DATABASE_URI_FALLBACK, SECRET_KEY_FALLBACK
 # This is the key in the session's key-value pair that holds the logged-in user's ID
 CURRENT_USER_KEY = "current_user"
 
-from func_and_dec import login_required, login, logout
+from func_and_dec import login_required, perform_login, perform_logout
 
 app = Flask(__name__)
 
@@ -53,11 +53,14 @@ def home_page():
         return redirect(url_for('dashboard'))
     return render_template('home.html')
 
-@login_required
 @app.route('/dashboard')
+@login_required
 def dashboard():
     """Dashboard page."""
-    return render_template('dashboard.html')
+
+    user = g.user
+
+    return render_template('dashboard.html', user=user)
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -86,7 +89,7 @@ def signup():
             return render_template('signup.html', form=form)
         
         # Log in user by adding user's ID to the session if the user successfully signs up
-        login(user)
+        perform_login(user)
 
         return redirect(url_for('dashboard'))
     
@@ -105,11 +108,11 @@ def login():
     form = LoginForm()
 
     if form.validate_on_submit():
-        user = User.authenticate(username=form.username.data, password=form.password.data)
+        user = User.authenticate(username=form.username.data, entered_login_pwd=form.password.data)
         
         if user:
             # Log in user by adding user's ID to the session
-            login(user)
+            perform_login(user)
             return redirect(url_for('dashboard'))
         
         else:
@@ -117,14 +120,14 @@ def login():
     
     return render_template('login.html', form=form)
 
-
 @app.route('/logout', methods=['POST'])
+@login_required
 def logout():
     """Handle logout of user."""
 
     # Log out user by removing user's ID from the session
     user = g.user
-    logout()
+    perform_logout()
     flash (f"Goodbye, {user.username}!")
 
     return redirect(url_for('home_page'))

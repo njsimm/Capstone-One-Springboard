@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+<!-- break -->
+{% block title %} Home {% endblock %}
+<!-- break -->
+{% block navbar_links %}{% endblock %}
+<!-- break -->
+
+{% block content %}
+<div>
+  <a href="{{ url_for('login') }}">Login</a>
+</div>
+<div>
+  <a href="{{ url_for('signup') }}">Signup</a>
+</div>
+
+{% endblock %}
