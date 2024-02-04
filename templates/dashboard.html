@@ -12,5 +12,29 @@
 <!-- break -->
 {% block content %}
 <h1>{{ user.username }}'s Dashboard</h1>
+<hr />
+<form
+  action="{{ url_for('handle_comparison') }}"
+  method="POST"
+  id="comparison-form"
+>
+  {{form.hidden_tag()}}
+  <!-- break -->
+  {% for field in form if field.widget.input_type != 'hidden' %}
+
+  <p>
+    {{field.label}} {{field}} {% for error in field.errors %} {{error}} {%
+    endfor %}
+  </p>
+
+  {% endfor %}
+  <button>Compare</button>
+</form>
+
+<h2>Results</h2>
+<ul id="results"></ul>
+
+<h2>History</h2>
+<ul id="history"></ul>
 
 {% endblock %}

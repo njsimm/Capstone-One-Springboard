@@ -75,9 +75,9 @@ class Asset(db.Model):
 
     ticker = db.Column(db.String(10), nullable=False, unique=True)
 
-    price = db.Column(db.Numeric(precision=15, scale=2), nullable=False)
+    price = db.Column(db.Numeric(precision=16, scale=2), nullable=False)
 
-    market_cap = db.Column(db.Numeric(precision=15, scale=2), nullable=False)
+    market_cap = db.Column(db.Numeric(precision=16, scale=2), nullable=False)
 
 
 class UserAssetComparison(db.Model):
@@ -97,16 +97,21 @@ class UserAssetComparison(db.Model):
 
     asset_id_1 = db.Column(db.Integer, db.ForeignKey('assets.id', ondelete='cascade'), nullable=False)
 
-    asset_1_price_at_comparison = db.Column(db.Numeric(precision=15, scale=2), nullable=False)
+    asset_1_price_at_comparison = db.Column(db.Numeric(precision=16, scale=2), nullable=False)
 
-    asset_1_market_cap_at_comparison = db.Column(db.Numeric(precision=15, scale=2), nullable=False)
+    asset_1_market_cap_at_comparison = db.Column(db.Numeric(precision=16, scale=2), nullable=False)
 
     asset_id_2 = db.Column(db.Integer, db.ForeignKey('assets.id', ondelete='cascade'), nullable=False)
 
-    asset_2_price_at_comparison = db.Column(db.Numeric(precision=15, scale=2), nullable=False)
+    asset_2_price_at_comparison = db.Column(db.Numeric(precision=16, scale=2), nullable=False)
 
-    asset_2_market_cap_at_comparison = db.Column(db.Numeric(precision=15, scale=2), nullable=False)
+    asset_2_market_cap_at_comparison = db.Column(db.Numeric(precision=16, scale=2), nullable=False)
 
     comparison_timestamp = db.Column(db.DateTime, nullable=False)
 
-    percent_difference = db.Column(db.Numeric(precision=15, scale=2), nullable=False)
+    percent_difference = db.Column(db.Numeric(precision=16, scale=2), nullable=False)
+
+    ######## Relationships ########
+    asset_1 = db.relationship('Asset', foreign_keys=[asset_id_1], backref='comparison_as_asset_1')
+    
+    asset_2 = db.relationship('Asset', foreign_keys=[asset_id_2], backref='comparison_as_asset_2')

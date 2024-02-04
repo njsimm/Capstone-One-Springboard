@@ -1,18 +1,16 @@
 import os
 
-from flask import Flask, url_for, render_template, redirect, flash, jsonify, request, session, g
+from flask import Flask, flash, g, jsonify, redirect, render_template, request, session, url_for
 from flask_debugtoolbar import DebugToolbarExtension
+from flask_wtf.csrf import validate_csrf
+from wtforms import ValidationError
 from sqlalchemy.exc import IntegrityError
 
-from models import db, connect_db, User
-from forms import SignupForm, LoginForm
 from config import DATABASE_URI_FALLBACK, SECRET_KEY_FALLBACK
-
-# Define the key used to store the current user's ID in the session
-# This is the key in the session's key-value pair that holds the logged-in user's ID
-CURRENT_USER_KEY = "current_user"
-
-from func_and_dec import login_required, perform_login, perform_logout
+from constants import CURRENT_USER_KEY
+from forms import SignupForm, LoginForm, ComparisonForm
+from func_and_dec import login_required, perform_login, perform_logout, get_asset_info, commit_asset_to_db, compare_assets_mc, commit_asset_comparison_to_db
+from models import User, UserAssetComparison, connect_db, db
 
 app = Flask(__name__)
 
@@ -53,14 +51,17 @@ def home_page():
         return redirect(url_for('dashboard'))
     return render_template('home.html')
 
-@app.route('/dashboard')
+@app.route('/dashboard', methods=['GET'])
 @login_required
 def dashboard():
     """Dashboard page."""
 
     user = g.user
+    history = UserAssetComparison.query.filter_by(user_id = user.id).all()
+    form = ComparisonForm()
+    
+    return render_template('dashboard.html', user=user, form=form, history=history)
 
-    return render_template('dashboard.html', user=user)
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -131,3 +132,58 @@ def logout():
     flash (f"Goodbye, {user.username}!")
 
     return redirect(url_for('home_page'))
+
+
+@app.route('/handle_comparison', methods=['POST'])
+@login_required
+def handle_comparison():
+    """Handle comparison form submission."""
+
+    try:
+        csrf_token = request.json.get('csrf_token')
+        validate_csrf(csrf_token)
+    except ValidationError:
+        return (jsonify(message="Invalid CSRF token."), 400)
+
+    asset_type_1 = request.json['asset_type_1']
+    ticker_1 = request.json['ticker_1']
+    asset_type_2 = request.json['asset_type_2']
+    ticker_2 = request.json['ticker_2']
+
+    if asset_type_1 == asset_type_2 and ticker_1 == ticker_2:
+        return (jsonify(message="Select two different assets."), 400)
+
+    asset_dict_1 = get_asset_info(asset_type_1, ticker_1)
+
+    if 'error' in asset_dict_1:
+        return (jsonify(message=asset_dict_1['error']), 400)
+
+    commit_asset_to_db(asset_dict_1)
+
+    asset_dict_2 = get_asset_info(asset_type_2, ticker_2)
+
+    if 'error' in asset_dict_2:
+        return (jsonify(message=asset_dict_2['error']), 400)
+
+    commit_asset_to_db(asset_dict_2)
+
+    results_dict = compare_assets_mc(asset_dict_1, asset_dict_2)
+
+    percentage_change = results_dict['percentage_change']
+    multiple = results_dict['multiple']
+
+    commit_asset_comparison_to_db(asset_dict_1, asset_dict_2, results_dict)
+
+    # jsonify the results_dict and send it to the front end to display the results. 
+    return (jsonify(results=results_dict), 200)
+
+@app.route('/get_user_history', methods=['GET'])
+@login_required
+def get_user_history():
+    """Get user's comparison history."""
+
+    user = g.user
+    history = UserAssetComparison.query.filter_by(user_id = user.id).all()
+    history_list = [{'comparison_timestamp': comparison.comparison_timestamp, 'name_1': comparison.asset_1.name, 'asset_1_market_cap_at_comparison': float(comparison.asset_1_market_cap_at_comparison),  'name_2': comparison.asset_2.name, 'asset_2_market_cap_at_comparison': float(comparison.asset_2_market_cap_at_comparison), 'percent_difference': float(comparison.percent_difference)} for comparison in history]
+
+    return (jsonify(history=history_list), 200)
