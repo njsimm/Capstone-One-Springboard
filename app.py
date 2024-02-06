@@ -27,7 +27,7 @@ debug = DebugToolbarExtension(app)
 # after configuration, connect the db/app
 connect_db(app)
 
-#################### User and g ####################
+# User and g
 # This function runs before every request
 # If logged in, add current user to Flask global, else add None
 
@@ -41,12 +41,10 @@ def determine_g():
     else:
         g.user = User.query.get(user_id)
 
-
-#################### Routes ####################
-        
+# Routes
 @app.route('/')
 def home_page():
-    """Home page."""
+    """If user is logged in, redirect to dashboard. If not, render home page."""
     if g.user:
         return redirect(url_for('dashboard'))
     return render_template('home.html')
@@ -54,25 +52,25 @@ def home_page():
 @app.route('/dashboard', methods=['GET'])
 @login_required
 def dashboard():
-    """Dashboard page."""
+    """
+    Renders the dashboard page.
+    Passes the user and the comparison form to the template to be used in the front end.
+    """
 
     user = g.user
-    history = UserAssetComparison.query.filter_by(user_id = user.id).all()
     form = ComparisonForm()
     
-    return render_template('dashboard.html', user=user, form=form, history=history)
-
+    return render_template('dashboard.html', user=user, form=form)
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     """
-    Handle user signup.
-    Create new user and add to DB. Redirect to dashboard.
-    If form not valid, present form.
-    If user already exists with that username: flash message and re-present form.
+    Handles user signup.
+    If user is logged in, redirect to dashboard. If not, render signup page.
+    Creates a form instance. If the form is not validated, the signup page is rendered. 
+    If the form is validated following input and submission of the information, the user is added to the database and logged in.
     """
 
-    # If user is logged in, redirect to dashboard
     if g.user:
         return redirect(url_for('dashboard'))
     
@@ -88,21 +86,24 @@ def signup():
         except IntegrityError:
             flash("Username taken. Please pick another")
             return render_template('signup.html', form=form)
-        
-        # Log in user by adding user's ID to the session if the user successfully signs up
+
         perform_login(user)
 
         return redirect(url_for('dashboard'))
     
     else:
         return render_template('signup.html', form=form)
-    
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    """Handle user login."""
+    """
+    Handles user login.
+    If user is already logged in, redirect to dashboard. If not, render login page.
+    Creates a form instance. If the form is not validated, the login page is rendered.
+    If the form is validated and the user is authenticated, the user is logged in and redirected to the dashboard.
+    If the user is not authenticated, a message is flashed and the login page is rendered.
+    """
 
-    # If user is logged in, redirect to dashboard
     if g.user:
         return redirect(url_for('dashboard'))
 
@@ -112,7 +113,6 @@ def login():
         user = User.authenticate(username=form.username.data, entered_login_pwd=form.password.data)
         
         if user:
-            # Log in user by adding user's ID to the session
             perform_login(user)
             return redirect(url_for('dashboard'))
         
@@ -124,21 +124,29 @@ def login():
 @app.route('/logout', methods=['POST'])
 @login_required
 def logout():
-    """Handle logout of user."""
+    """
+    Handles logout of user.
+    Logs out the user and redirects to the home page.
+    Flashes a goodbye message to the user.
+    """
 
-    # Log out user by removing user's ID from the session
     user = g.user
     perform_logout()
     flash (f"Goodbye, {user.username}!")
 
     return redirect(url_for('home_page'))
 
-
 @app.route('/handle_comparison', methods=['POST'])
 @login_required
 def handle_comparison():
-    """Handle comparison form submission."""
-
+    """
+    Handles the comparison form submission.
+    Gets the CSRF token from the request and validates it.
+    If the CSRF token is invalid, a message is returned and a 400 status code is sent.
+    If the CSRF token is valid, both asset types and tickers are retrieved from the request.
+    Assets are added to the database and compared, the comparison is added to the database, and the results are returned as a JSON object.
+    """
+    
     try:
         csrf_token = request.json.get('csrf_token')
         validate_csrf(csrf_token)
@@ -151,7 +159,7 @@ def handle_comparison():
     ticker_2 = request.json['ticker_2']
 
     if asset_type_1 == asset_type_2 and ticker_1 == ticker_2:
-        return (jsonify(message="Select two different assets."), 400)
+        return (jsonify(message="Select two different assets."), 422)
 
     asset_dict_1 = get_asset_info(asset_type_1, ticker_1)
 
@@ -169,19 +177,18 @@ def handle_comparison():
 
     results_dict = compare_assets_mc(asset_dict_1, asset_dict_2)
 
-    percentage_change = results_dict['percentage_change']
-    multiple = results_dict['multiple']
-
     commit_asset_comparison_to_db(asset_dict_1, asset_dict_2, results_dict)
 
-    # jsonify the results_dict and send it to the front end to display the results. 
     return (jsonify(results=results_dict), 200)
 
 @app.route('/get_user_history', methods=['GET'])
 @login_required
 def get_user_history():
-    """Get user's comparison history."""
-
+    """
+    Retrieves the user's comparison history.
+    Comparison history is retrieved from the database and returned as a JSON object.
+    """
+    
     user = g.user
     history = UserAssetComparison.query.filter_by(user_id = user.id).all()
     history_list = [{'comparison_timestamp': comparison.comparison_timestamp, 'name_1': comparison.asset_1.name, 'asset_1_market_cap_at_comparison': float(comparison.asset_1_market_cap_at_comparison),  'name_2': comparison.asset_2.name, 'asset_2_market_cap_at_comparison': float(comparison.asset_2_market_cap_at_comparison), 'percent_difference': float(comparison.percent_difference)} for comparison in history]
