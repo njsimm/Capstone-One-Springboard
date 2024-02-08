@@ -5,17 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>{% block title %} {% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>
-    <nav>
+    <nav class="navbar">
       <ul>
         {% block navbar_links %} {% endblock %}
       </ul>
     </nav>
 
     {% for msg in get_flashed_messages() %}
-    <div>
-      <p>{{ msg }}</p>
+    <div class="content-flex-flash">
+      <p class="flash-message">{{ msg }}</p>
     </div>
     {% endfor %}
 

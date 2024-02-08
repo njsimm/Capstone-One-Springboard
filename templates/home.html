@@ -6,11 +6,18 @@
 <!-- break -->
 
 {% block content %}
-<div>
-  <a href="{{ url_for('login') }}">Login</a>
-</div>
-<div>
-  <a href="{{ url_for('signup') }}">Signup</a>
+<div class="content-flex">
+  <div class="home-container">
+    <div class="box-container">
+      <div class="header-container">
+        <h1>MarketCap Metrics</h1>
+      </div>
+      <div class="anchor-container">
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('signup') }}">Signup</a>
+      </div>
+    </div>
+  </div>
 </div>
 
 {% endblock %}

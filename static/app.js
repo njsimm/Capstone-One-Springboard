@@ -93,13 +93,13 @@ async function getUserHistory() {
   }
 }
 
-// Clears the history list, gets the most recent 10 comparisons, creates a new list element for each comparison, sets the innerHTML to the comparison data, and appends it to the history list.
+// Clears the history list, gets the most recent 5 comparisons, creates a new list element for each comparison, sets the innerHTML to the comparison data, and appends it to the history list.
 function updateHistory(history) {
   const historyUl = document.querySelector("#history");
   historyUl.innerHTML = "";
-  const recentTenHistory = history.slice(0, 10);
+  const recentFiveHistory = history.slice(0, 5);
 
-  for (let comparison of recentTenHistory) {
+  for (let comparison of recentFiveHistory) {
     const newHistoryLi = document.createElement("li");
     newHistoryLi.innerHTML = `Date: ${comparison.comparison_timestamp} | ${comparison.name_1} compared to ${comparison.name_2} | Percent Change: ${comparison.name_1} to ${comparison.name_2} is ${comparison.percent_difference}%`;
     historyUl.appendChild(newHistoryLi);

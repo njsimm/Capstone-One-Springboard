@@ -7,23 +7,33 @@
 {% endblock %}
 <!-- break -->
 {% block content %}
-<h1>Signup</h1>
 
-<form action="" method="POST">
-  {{form.hidden_tag()}}
-  <!-- break -->
-  {% for field in form if field.widget.input_type != 'hidden' %}
+<div class="content-flex">
+  <div class="box-container">
+    <div class="header-container">
+      <h1>Signup</h1>
+    </div>
+    <form action="" method="POST">
+      {{form.hidden_tag()}}
+      <!-- break -->
+      {% for field in form if field.widget.input_type != 'hidden' %}
 
-  <p>
-    {{field.label}} {{field}} {% for error in field.errors %} {{error}} {%
-    endfor %}
-  </p>
-
-  {% endfor %}
-  <button>Signup!</button>
-</form>
-<div>
-  <a href="{{ url_for('home_page') }}">Cancel</a>
+      <p>
+        {{field.label (class_='access-input-label')}} {{field
+        (class_='access-input-box')}}
+      </p>
+      {% if field.errors%}
+      <div class="content-flex-flash">
+        {% for error in field.errors %}
+        <p class="flash-message">{{error}}</p>
+        {% endfor %}
+      </div>
+      {%endif%} {% endfor %}
+      <div class="login-signup-button-container">
+        <button class="login-signup-button">Signup</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 {% endblock %}

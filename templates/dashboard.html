@@ -11,30 +11,46 @@
 {% endblock %}
 <!-- break -->
 {% block content %}
-<h1>{{ user.username }}'s Dashboard</h1>
-<hr />
-<form
-  action="{{ url_for('handle_comparison') }}"
-  method="POST"
-  id="comparison-form"
->
-  {{form.hidden_tag()}}
-  <!-- break -->
-  {% for field in form if field.widget.input_type != 'hidden' %}
+<div class="user-dashboard-container">
+  <h1 class="user-dashboard">{{ user.username }}'s Dashboard</h1>
+</div>
+<div class="dashboard-flex">
+  <div class="comparison-form-container">
+    <form
+      action="{{ url_for('handle_comparison') }}"
+      method="POST"
+      id="comparison-form"
+    >
+      {{form.hidden_tag()}}
+      <div class="form-row">
+        <div class="form-column">
+          {{ form.asset_type_1.label (class_='form-label') }} {{
+          form.asset_type_1() }} {{ form.ticker_1.label (class_='form-label')}}
+          {{ form.ticker_1() }}
+        </div>
+        <div class="form-column">
+          {{ form.asset_type_2.label (class_='form-label')}} {{
+          form.asset_type_2() }} {{ form.ticker_2.label (class_='form-label')}}
+          {{ form.ticker_2() }}
+        </div>
+        {% for field in form %}{% if field.errors %}
+        <p>{% for error in field.errors %} {{error}} {% endfor %}</p>
+        {% endif %}{% endfor %}
+      </div>
+      <div class="compare-button-container">
+        <button class="compare-button">Compare</button>
+      </div>
+      <div class="results-container">
+        <h2>Results</h2>
+        <ul id="results"></ul>
+      </div>
+    </form>
+  </div>
+</div>
 
-  <p>
-    {{field.label}} {{field}} {% for error in field.errors %} {{error}} {%
-    endfor %}
-  </p>
-
-  {% endfor %}
-  <button>Compare</button>
-</form>
-
-<h2>Results</h2>
-<ul id="results"></ul>
-
-<h2>History</h2>
-<ul id="history"></ul>
+<div class="history-container">
+  <h2>History</h2>
+  <ol id="history"></ol>
+</div>
 
 {% endblock %}
